@@ -1,4 +1,4 @@
-name: Auto Deploy NodeApplication
+name: Auto Deploy NodeApplication on ec2
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
 
       # Step 2: Login to Docker Hub using credentials stored in GitHub secrets
       - name: Login to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}  # Log into Docker Hub with the username and password
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}  # Log into Docker Hub
 
       # Step 3: Build the Docker image from the project
       - name: Build Docker Image
@@ -39,6 +39,13 @@ jobs:
       - name: Remove Old Container (if exists)
         run: docker rm -f nodejs-app-container || true  # Force-remove any old container named 'nodejs-app-container' if it exists
 
-      # Step 3: Run the new Docker container using the pulled image
+      # Step 3: Run the new Docker container using the pulled image with all necessary environment variables
       - name: Run Docker Container
-        run: docker run -d -p 3000:3000 --name nodejs-app-container -e MONGO_PASSWORD=${{ secrets.MONGODB_PASSWORD }} shafique471/node_aws  # Run the container in detached mode, map port 3000, and set the MONGO_PASSWORD as an environment variable
+        run: |
+          docker run -d -p 3000:3000 \
+            --name nodejs-app-container \
+            -e PORT=${{ secrets.PORT }} \
+            -e MONGO_URI=${{ secrets.MONGO_URI }} \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            -e VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }} \
+            shafique471/node_aws
